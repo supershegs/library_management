@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "drf_spectacular",
+    "rest_framework",
+    "frontend_app"
 ]
 
 MIDDLEWARE = [
@@ -99,6 +102,20 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PERMISSION_CLASSES': []
+}
+AUTH_USER_MODEL = 'frontend_app.CustomUser'
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Library Frontend API',
+    'DESCRIPTION': 'API for users to browse and borrow books',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/

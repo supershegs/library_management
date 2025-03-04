@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
+from datetime import timedelta
+
 
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
@@ -47,18 +49,21 @@ class Book(BaseModel):
         ('apress', 'Apress'),
         ('manning', 'Manning'),
     ]
-
+    
+    id = models.IntegerField(primary_key=True)
     title = models.CharField(max_length=200)
     author = models.CharField(max_length=100)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     publisher = models.CharField(max_length=50, choices=PUBLISHER_CHOICES)
     is_available = models.BooleanField(default=True)
-
+    available_copies = models.PositiveIntegerField(default=1)
+    
     def __str__(self):
         return self.title
 
 
 class BorrowedBook(BaseModel):
+    # id = models.IntegerField(primary_key=True)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     borrowed_at = models.DateTimeField(auto_now_add=True)
@@ -66,3 +71,9 @@ class BorrowedBook(BaseModel):
 
     def __str__(self):
         return f"{self.user.email} borrowed {self.book.title}"
+    
+    
+    @property
+    def return_date(self):
+        return self.borrowed_at.date() + timedelta(days=self.duration_days)
+

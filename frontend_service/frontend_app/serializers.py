@@ -86,6 +86,22 @@ class BookSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'author', 'category', 'publisher', 'is_available']
 
 
+class BookStoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = "__all__"  
+
+    def create(self, validated_data):
+        """
+        Allow setting the 'id' manually when creating a book.
+        """
+        book_id = validated_data.pop("id", None) 
+        book = Book(**validated_data)
+        if book_id:
+            book.id = book_id 
+        book.save()
+        return book
+
 class BookCategoryFilterSerializer(serializers.Serializer):
     category = serializers.ChoiceField(
         choices=['fiction', 'technology', 'science'],
@@ -105,9 +121,45 @@ class SessionIDSerializer(serializers.Serializer):
     duration_days= serializers.IntegerField()
     
 
-class BorrowBookSerializer(serializers.ModelSerializer):  
+class BorrowBookSerializer(serializers.ModelSerializer): 
+    session_id = serializers.UUIDField(write_only=True)  # Hidden in response
+    duration_days = serializers.IntegerField()
+
     class Meta:
         model = BorrowedBook
-        fields = ['book', 'duration_days', 'user']
+        fields = ['id','session_id', 'duration_days', 'borrowed_at','book', 'user']
+        extra_kwargs = {
+            'book': {'read_only': True},  
+            'user': {'read_only': True},  
+            'borrowed_at': {'read_only': True},
+        }
+
+    def create(self, validated_data):
+        """
+        Ensure that the borrowed book ID matches the book ID.
+        """
+        book = validated_data.pop('book')  
+        borrowed_book = BorrowedBook.objects.create(book=book, **validated_data)
+        return borrowed_book
 
 
+    def to_representation(self, instance):  
+        """Modify the response to show book and user details."""
+        rep = super().to_representation(instance)
+
+        # Ensure instance is a model instance, not a dictionary
+        if isinstance(instance, dict):
+            return rep  # Return as-is if it's a dictionary
+
+        rep['book'] = {
+            'id': instance.book.id,
+            'title': instance.book.title,
+            'author': instance.book.author,
+        }
+        rep['user'] = {
+            'id': instance.user.id,
+            'email': instance.user.email,
+            'first_name': instance.user.first_name,
+            
+        }
+        return rep

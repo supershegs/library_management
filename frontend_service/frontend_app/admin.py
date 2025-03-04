@@ -25,6 +25,13 @@ admin.site.register(ActiveUser, ActiveUserAdmin)
 
 class BookAdmin(admin.ModelAdmin):
     list_display = (
-        'title','author', 'category', 'publisher', 'is_available'
+        'id', 'title','author', 'category', 'publisher', 'is_available','available_copies'
     )
 admin.site.register(Book, BookAdmin)
+
+
+class BorrowedBookAdmin(admin.ModelAdmin):
+    list_display = (
+        'id','user', 'book','borrowed_at', 'duration_days'
+    )
+admin.site.register(BorrowedBook, BorrowedBookAdmin)

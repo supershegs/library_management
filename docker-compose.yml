@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  backend:
+    image: backend_service:latest
+    build:
+      context: ./backend_service
+      dockerfile: Dockerfile
+    container_name: backend_service
+    restart: always
+    depends_on:
+      - redis
+    environment:
+      - DEBUG=True
+    ports:
+      - "5000:5000"
+
+  frontend:
+    image: frontend_service:latest
+    build:
+      context: ./frontend_service
+      dockerfile: Dockerfile
+    container_name: frontend_service
+    restart: always
+    depends_on:
+      - backend
+      - redis
+    environment:
+      - DEBUG=True
+    ports:
+      - "8000:8000"
+
+  redis:
+    image: "redis:alpine"
+    container_name: redis_service
+    restart: always
+    ports:
+      - "6379:6379"
+
+  celery_worker_backend:
+    build:
+      context: ./backend_service
+      dockerfile: Dockerfile
+    image: backend_service-celery-worker-backend
+    container_name: celery_worker_backend
+    restart: always
+    depends_on:
+      - backend
+      - redis
+    command: celery -A backend_config worker --loglevel=info
+    env_file:
+      - .env
+
+  celery_worker_frontend:
+    build:
+      context: ./frontend_service
+      dockerfile: Dockerfile
+    image: frontend_service-celery-worker-frontend
+    container_name: celery_worker_frontend
+    restart: always
+    depends_on:
+      - frontend
+      - redis
+    command: celery -A frontend_config worker --loglevel=info
+    env_file:
+      - .env
